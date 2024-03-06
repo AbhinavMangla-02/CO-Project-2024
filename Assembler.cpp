@@ -1,48 +1,62 @@
-#include<bits/stdc++.h>
+#include <bits/stdc++.h>
+#include <fstream>
+#include <bitset>
+
+
 using namespace std;
-int bin_to_dec(string s)
+
+
+string Rtype_to_binary(vector<string> vtemp, map<string,string> opcode, map<string,string> Register_enco, map<string,string> funct3, map<string,string> funct7)
 {
-    int ans = 0;
-    for(int i=s.length()-1;i>=0 ;i--)
-    {
-        ans+= (s[i]-'0')*pow(2,s.length()-i-1);
-    }
-    return ans;
+    string output = "";
+    string rd = Register_enco[vtemp[1]];
+    string rs1 = Register_enco[vtemp[2]];
+    string rs2 = Register_enco[vtemp[3]];
+    output+=opcode[vtemp[0]];
+    output+=" ";
+    output+=rd;
+    output+=" ";
+    output+=funct3[vtemp[0]];
+    output+=" ";
+    output+=rs1;
+    output+=" ";
+    output+=rs2;
+    output+=" ";
+    output+=funct7[vtemp[0]];
+    return output;
 }
-void add(map<string,int> &reg_stor, string rd , string rs1,string rs2)
-{
-    reg_stor[rd] = reg_stor[rs1] + reg_stor[rs2];
-}
+
+
 int main()
 {
     map<string,string> opcode;
-        {
-            opcode["add"]="0110011";
-            opcode["sub"]="0110011";
-            opcode["sll"]="0110011";
-            opcode["slt"]="0110011";
-            opcode["sltu"]="0110011";
-            opcode["xor"]="0110011";
-            opcode["srl"]="0110011";
-            opcode["or"]="0110011";
-            opcode["and"]="0110011";
-            opcode["addi"]="0010011";
-            opcode["sltiu"]="0010011";
-            opcode["lw"]="0000011";
-            opcode["sw"]="0100011";
-            opcode["jalr"]="1100111";
-            opcode["beq"]="1100011";
-            opcode["bne"]="1100011";
-            opcode["blt"]="1100011";
-            opcode["bge"]="1100011";
-            opcode["bltu"]="1100011";
-            opcode["bgeu"]="1100011";
-            opcode["lui"]="0110111";
-            opcode["auipc"]="0010111";
-            opcode["jal"]="1101111";
-            // for Bonus Question you just have to make the mul , rst , halt,rvrs here , you have to make opcode yourself
+    {
+        opcode["add"]="0110011";
+        opcode["sub"]="0110011";
+        opcode["sll"]="0110011";
+        opcode["slt"]="0110011";
+        opcode["sltu"]="0110011";
+        opcode["xor"]="0110011";
+        opcode["srl"]="0110011";
+        opcode["or"]="0110011";
+        opcode["and"]="0110011";
+        opcode["addi"]="0010011";
+        opcode["sltiu"]="0010011";
+        opcode["lw"]="0000011";
+        opcode["sw"]="0100011";
+        opcode["jalr"]="1100111";
+        opcode["beq"]="1100011";
+        opcode["bne"]="1100011";
+        opcode["blt"]="1100011";
+        opcode["bge"]="1100011";
+         opcode["bltu"]="1100011";
+        opcode["bgeu"]="1100011";
+        opcode["lui"]="0110111";
+        opcode["auipc"]="0010111";
+        opcode["jal"]="1101111";
+        // for Bonus Question you just have to make the mul , rst , halt,rvrs here , you have to make opcode yourself
+    }
 
-        }
     map<string,string> Register_enco;
     {
         Register_enco["zero"]="00000";
@@ -78,6 +92,7 @@ int main()
         Register_enco["t5"]="11110";
         Register_enco["t6"]="11111";
     }
+
     map<string,string> funct3;
     {
         funct3["add"]="000";
@@ -104,6 +119,7 @@ int main()
         funct3["auipc"]="000";
         funct3["jal"]="000";
     }
+
     map<string,string> funct7;
     {
         funct7["add"]="0000000";
@@ -116,6 +132,7 @@ int main()
         funct7["or"]="0000000";
         funct7["and"]="0000000";
     }
+
     map<string,char> ins_type;
     {
         ins_type["add"]='R';
@@ -142,6 +159,7 @@ int main()
         ins_type["auipc"]='U';
         ins_type["jal"]='J';
     }
+
     map<string,int> register_storage;
     {
         register_storage["zero"]=0;
@@ -177,34 +195,30 @@ int main()
         register_storage["t5"]=0;
         register_storage["t6"]=0;
     }
-    std::ifstream input_file;
+
+    //opening input file
+    ifstream input_file;
     input_file.open("i.txt");
     if (!input_file.is_open()) {
-        cout << "Error opening input file: " << endl;
+        cout << "Error opening input file! " << endl;
 
     }
-    ofstream output_file;
-    output_file.open("Output.txt");
-    if (!output_file.is_open()) {
-        cout << "Error opening output file!" << endl;
-    }
+
     string line;
-while(input_file.eof()==0)
-    {
+    vector<vector<string>> full_program;
     vector<string> v;
     while (getline(input_file, line)) 
     {
         v.clear();
-        // cout << "read line: " << line << "\n" ;
         if (line == "") 
         {
             continue;
         }
+
         // Creates the vector of different strings containing the Instruction and Registers
         string word = "";
         for (int it = 0; it < line.length(); it++) 
         {
-            // cout << "inside loop \n" ;
             if (line[it] == ' ' || line[it] == ',') 
             {
                 if (word != "") 
@@ -216,38 +230,35 @@ while(input_file.eof()==0)
             else 
             {
                 word += line[it];
-                cout << "word = " << word << endl;
             }
         }
         if (word != "") 
         {
             v.push_back(word);
+            word = "";
         }
-    }
-        // If the instruction is R type
 
-        // for(auto it : v)
-        // {
-        //     cout << it << " " ;
-        // }
-        // cout << endl;
-        if(ins_type[v[0]]=='R')
-        {
-            cout << "IF ENTERED R TYPE\n";
-            string output = "";
-            output+=opcode[v[0]];
-            string rd = Register_enco[v[1]];
-            string rs1 = Register_enco[v[2]];
-            string rs2 = Register_enco[v[3]];
-            output+=rd;
-            output+=funct3[v[0]];
-            output+=rs1;
-            output+=rs2;
-            output+=funct7[v[0]];
-            add(register_storage,rd,rs1,rs2);
-            output_file<<output<<endl;    
-        }
+        full_program.emplace_back(v);
     }
     input_file.close();
-    output_file.close();
+
+
+
+
+    //opening output file
+    ofstream output_file;
+    output_file.open("Output.txt");
+    if (!output_file.is_open()) {
+        cout << "Error opening output file!" << endl;
     }
+
+    for (int j = 0; j<full_program.size(); j++)
+    {
+        if(ins_type[full_program[j][0]]=='R')
+        {
+            output_file << Rtype_to_binary(full_program[j], opcode, Register_enco, funct3, funct7) << endl;
+        }
+    }
+
+    output_file.close();
+}
