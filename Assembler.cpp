@@ -6,24 +6,36 @@
 using namespace std;
 
 
+string check_and_convert(string tocheck, map<string, string> checker, string &isError)
+{
+    if (checker.find(tocheck)==checker.end())
+    {
+        isError = "True";
+    }
+    return checker[tocheck];
+}
+
+
 string Rtype_to_binary(vector<string> vtemp, map<string,string> opcode, map<string,string> Register_enco, map<string,string> funct3, map<string,string> funct7)
 {
+    string is_error = "False";
     string output = "";
-    string rd = Register_enco[vtemp[1]];
-    string rs1 = Register_enco[vtemp[2]];
-    string rs2 = Register_enco[vtemp[3]];
-    output+=opcode[vtemp[0]];
+    string rd = check_and_convert(vtemp[1], Register_enco, is_error);
+    string rs1 = check_and_convert(vtemp[2], Register_enco, is_error);
+    string rs2 = check_and_convert(vtemp[3], Register_enco, is_error);
+    output+=check_and_convert(vtemp[0], opcode, is_error);
     output+=" ";
     output+=rd;
     output+=" ";
-    output+=funct3[vtemp[0]];
+    output+=check_and_convert(vtemp[0], funct3, is_error);
     output+=" ";
     output+=rs1;
     output+=" ";
     output+=rs2;
     output+=" ";
-    output+=funct7[vtemp[0]];
-    return output;
+    output+=check_and_convert(vtemp[0], funct7, is_error);
+    if (is_error=="False") return output;
+    else return "Error";
 }
 
 
@@ -204,6 +216,7 @@ int main()
 
     }
 
+    //reading all data from input file and storing it in full_program
     string line;
     vector<vector<string>> full_program;
     vector<string> v;
@@ -245,20 +258,48 @@ int main()
 
 
 
-    //opening output file
-    ofstream output_file;
-    output_file.open("Output.txt");
-    if (!output_file.is_open()) {
-        cout << "Error opening output file!" << endl;
-    }
 
+    //check and convert the input to binary
+    vector<string> binary_output;
+    bool faulty_code = false;
+    string temp_binary;
+    int PC = 0;           //program counter
+    
     for (int j = 0; j<full_program.size(); j++)
     {
         if(ins_type[full_program[j][0]]=='R')
         {
-            output_file << Rtype_to_binary(full_program[j], opcode, Register_enco, funct3, funct7) << endl;
+            temp_binary = Rtype_to_binary(full_program[j], opcode, Register_enco, funct3, funct7);
+            if (temp_binary=="Error")
+            {
+                faulty_code = true;
+                break;
+            }
+            binary_output.emplace_back(temp_binary);
+            PC++;
         }
     }
 
-    output_file.close();
+
+    //if code is faulty, will give error else write the output to file
+    if (faulty_code==true)
+    {
+        cout << "Error in line " << PC << endl;
+    }
+    
+    else
+    {
+        ofstream output_file;
+        output_file.open("Output.txt");
+        if (!output_file.is_open()) {
+            cout << "Error opening output file!" << endl;
+        }
+
+        for (int k = 0; k<binary_output.size(); k++)
+        {
+            output_file << binary_output[k] << endl;
+        }
+
+        output_file.close();
+    }
 }
