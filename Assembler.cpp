@@ -23,17 +23,48 @@ string Rtype_to_binary(vector<string> vtemp, map<string,string> opcode, map<stri
     string rd = check_and_convert(vtemp[1], Register_enco, is_error);
     string rs1 = check_and_convert(vtemp[2], Register_enco, is_error);
     string rs2 = check_and_convert(vtemp[3], Register_enco, is_error);
-    output+=check_and_convert(vtemp[0], opcode, is_error);
-    output+=" ";
-    output+=rd;
-    output+=" ";
-    output+=check_and_convert(vtemp[0], funct3, is_error);
-    output+=" ";
-    output+=rs1;
+    output+=check_and_convert(vtemp[0], funct7, is_error);
     output+=" ";
     output+=rs2;
     output+=" ";
-    output+=check_and_convert(vtemp[0], funct7, is_error);
+    output+=rs1;
+    output+=" ";
+    output+=check_and_convert(vtemp[0], funct3, is_error);
+    output+=" ";
+    output+=rd;
+    output+=" ";
+    output+=check_and_convert(vtemp[0], opcode, is_error);
+    if (is_error=="False") return output;
+    else return "Error";
+}
+
+
+string Stype_to_binary(vector<string> vtemp, map<string,string> opcode, map<string,string> Register_enco, map<string,string> funct3)
+{
+    string is_error = "False";
+    string output = "";
+    string rs1 = check_and_convert(vtemp[3], Register_enco, is_error);
+    string rs2 = check_and_convert(vtemp[1], Register_enco, is_error);
+    int decimal_value = stoi(vtemp[2]);
+    if (decimal_value > 2047 || decimal_value < -2048)
+    {
+        return "Error";
+    }
+    bitset<12> imm_whole(decimal_value);
+    string imm_whole_final = imm_whole.to_string();
+    string imm_0_to_4 = imm_whole_final.substr(7,5);
+    string imm_5_to_11 = imm_whole_final.substr(0,7);
+    output += imm_5_to_11;
+    output += " ";
+    output += rs2;
+    output += " ";
+    output += rs1;
+    output += " ";
+    output += check_and_convert(vtemp[0], funct3, is_error);
+    output += " ";
+    output += imm_0_to_4;
+    output += " ";
+    output += check_and_convert(vtemp[0], opcode, is_error);
     if (is_error=="False") return output;
     else return "Error";
 }
@@ -61,7 +92,7 @@ int main()
         opcode["bne"]="1100011";
         opcode["blt"]="1100011";
         opcode["bge"]="1100011";
-         opcode["bltu"]="1100011";
+        opcode["bltu"]="1100011";
         opcode["bgeu"]="1100011";
         opcode["lui"]="0110111";
         opcode["auipc"]="0010111";
@@ -232,7 +263,7 @@ int main()
         string word = "";
         for (int it = 0; it < line.length(); it++) 
         {
-            if (line[it] == ' ' || line[it] == ',') 
+            if (line[it] == ' ' || line[it] == ',' || line[it] == '(' || line[it] == ')') 
             {
                 if (word != "") 
                 {
@@ -270,6 +301,17 @@ int main()
         if(ins_type[full_program[j][0]]=='R')
         {
             temp_binary = Rtype_to_binary(full_program[j], opcode, Register_enco, funct3, funct7);
+            if (temp_binary=="Error")
+            {
+                faulty_code = true;
+                break;
+            }
+            binary_output.emplace_back(temp_binary);
+            PC++;
+        }
+        else if(ins_type[full_program[j][0]]=='S')
+        {
+            temp_binary = Stype_to_binary(full_program[j], opcode, Register_enco, funct3);
             if (temp_binary=="Error")
             {
                 faulty_code = true;
