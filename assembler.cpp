@@ -5,7 +5,64 @@
 
 using namespace std;
 
+string string_to_bin(string s)
+{
+    int num = 0;
+    if(s[0] == '-')
+    {
+        for(int i = 1 ;i < s.length() ;i++)
+        {
+            num = num*10+ (s[i]-'0');
+        }
+        num = -1*(num);
+    }
+    else
+    {
+        for(int i = 0 ;i < s.length() ;i++)
+        {
+            num = num*10+ (s[i]-'0');
+        }
+    }
 
+    // cout << num << endl;
+    // string ans = "";
+    if (num > 2047 || num < -2048)
+    {
+        return "Error";
+    }
+    bitset<12> imm_whole(num);
+    string ans = imm_whole.to_string();
+    return ans;
+}
+string string_to_bin_Jtype(string s)
+{
+    int num = 0;
+    if(s[0] == '-')
+    {
+        for(int i = 1 ;i < s.length() ;i++)
+        {
+            num = num*10+ (s[i]-'0');
+        }
+        num = -1*(num);
+    }
+    else
+    {
+        for(int i = 0 ;i < s.length() ;i++)
+        {
+            num = num*10+ (s[i]-'0');
+        }
+    }
+
+    // cout << num << endl;
+    // string ans = "";
+    // if (num > 2047 || num < -2048)
+    // {
+    //     return "Error";
+    // }
+    bitset<20> imm_whole(num);
+    string ans = imm_whole.to_string();
+    return ans;
+}
 string check_and_convert(string tocheck, map<string, string> checker, string &isError)
 {
     if (checker.find(tocheck)==checker.end())
@@ -34,7 +91,41 @@ string Utype_to_binary(vector<string> vtemp, map<string,string> opcode, map<stri
     if (is_error=="False") return output;
     else return "Error";
 }
-
+string Btype_to_binary(vector<string> vtemp, map<string,string> opcode, map<string,string> Register_enco, map<string,string> funct3)
+{
+    string is_error = "False";
+    string output = "";
+    vtemp[3] = string_to_bin(vtemp[3]);
+    // cout << vtemp[3] ;
+    // cout << vtemp[3] << endl;
+    for(int i =0 ; i < 7 ; i++)
+    {
+        output+=vtemp[3][i];
+        // cout << vtemp[3][i];
+    }
+    // cout << endl;
+    // // output+=" ";
+    string rs2 = check_and_convert(vtemp[2], Register_enco, is_error);
+    string rs1 = check_and_convert(vtemp[1], Register_enco, is_error);
+    // cout << rs2 << " " << rs1 << endl;
+    // output+=" ";
+    output+=rs2;
+    // output+=" ";
+    output+=rs1;
+    // cout << funct3[vtemp[0]] << endl;
+    output+=check_and_convert(vtemp[0], funct3, is_error);
+    // output+=" ";
+    // output+=" ";
+    for(int i =7 ; i < 12 ; i++)
+    {
+        output+=vtemp[3][i];
+    //    cout << vtemp[3][i];
+    }
+    // cout << endl;
+    output+=check_and_convert(vtemp[0], opcode, is_error);
+    if (is_error=="False") return output;
+    else return "Error";
+}
 
 string Rtype_to_binary(vector<string> vtemp, map<string,string> opcode, map<string,string> Register_enco, map<string,string> funct3, map<string,string> funct7)
 {
@@ -52,7 +143,44 @@ string Rtype_to_binary(vector<string> vtemp, map<string,string> opcode, map<stri
     if (is_error=="False") return output;
     else return "Error";
 }
-
+string Itype_to_binary(vector<string> vtemp, map<string,string> opcode, map<string,string> Register_enco, map<string,string> funct3,string rs1, string imm)
+{
+    string is_error = "False";
+    string output = "";
+    output+=imm;
+    // output+=" ";
+    // string rs2 = check_and_convert(vtemp[2], Register_enco, is_error);
+    string rd = check_and_convert(vtemp[1], Register_enco, is_error);
+    output+=Register_enco[rs1];
+    // output+=" ";
+    output+=funct3[vtemp[0]];
+    // output+=" ";
+    output+=rd;
+    // output+=" ";
+    output+=check_and_convert(vtemp[0], opcode, is_error);
+    if (is_error=="False") return output;
+    else return "Error";
+}
+string Itype_to_binary(vector<string> vtemp, map<string,string> opcode, map<string,string> Register_enco, map<string,string> funct3)
+{
+    string is_error = "False";
+    string output = "";
+    // cout << vtemp[3] << endl;
+    output+=string_to_bin(vtemp[3]);
+    cout << output << endl;
+    // output+=" ";
+    string rs2 = check_and_convert(vtemp[2], Register_enco, is_error);
+    string rd = check_and_convert(vtemp[1], Register_enco, is_error);
+    output+=rs2;
+    // output+=" ";
+    output+=check_and_convert(vtemp[0], funct3, is_error);
+    // output+=" ";
+    output+=rd;
+    // output+=" ";
+    output+=check_and_convert(vtemp[0], opcode, is_error);
+    if (is_error=="False") return output;
+    else return "Error";
+}
 
 string Stype_to_binary(vector<string> vtemp, map<string,string> opcode, map<string,string> Register_enco, map<string,string> funct3)
 {
@@ -78,7 +206,41 @@ string Stype_to_binary(vector<string> vtemp, map<string,string> opcode, map<stri
     if (is_error=="False") return output;
     else return "Error";
 }
-
+string Jtype_to_binary(vector<string> vtemp, map<string,string> opcode, map<string,string> Register_enco)
+{
+    string is_error = "False";
+    string output = "";
+    string data = string_to_bin_Jtype(vtemp[2]);
+    cout << data;
+    output += data[0];
+    for(int i = 9 ; i <= 19 ; i++)
+    {
+        output+=data[i];
+    }
+    for(int i = 1 ; i <= 8 ; i++)
+    {
+        output+=data[i];
+    }
+    // output+=data[10];
+    // for(int i = 11 ; i <=19 ; i++)
+    // {
+    //     output+=data[i];
+    // }
+    // for(int i =10 ; i < 20 ; i++)
+    // {
+    //     output+=vtemp[2][i];
+    // }
+    // cout << data << endl;
+    string rs1 = check_and_convert(vtemp[1], Register_enco, is_error);
+    output+=rs1;
+    // cout << rs1;
+    output+=check_and_convert(vtemp[0], opcode, is_error);
+    if (is_error=="False") return output;
+    else 
+        {
+            return "Error";
+        }
+}
 
 int main()
 {

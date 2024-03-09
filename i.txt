@@ -1,1 +1,1 @@
-add gp,ra,sp
+add s1,s2,s3
