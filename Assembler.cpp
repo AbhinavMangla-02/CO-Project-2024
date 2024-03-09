@@ -16,6 +16,26 @@ string check_and_convert(string tocheck, map<string, string> checker, string &is
 }
 
 
+string Utype_to_binary(vector<string> vtemp, map<string,string> opcode, map<string,string> Register_enco)
+{
+    string is_error = "False";
+    string output = "";
+    string rd = check_and_convert(vtemp[1], Register_enco, is_error);
+    int decimal_value = stoi(vtemp[2]);
+    if (decimal_value > 1048575 || decimal_value < -1048576)
+    {
+        return "Error";
+    }
+    bitset<20> imm_whole(decimal_value);
+    string imm_whole_final = imm_whole.to_string();
+    output += imm_whole_final;
+    output += rd;
+    output += check_and_convert(vtemp[0], opcode, is_error);
+    if (is_error=="False") return output;
+    else return "Error";
+}
+
+
 string Rtype_to_binary(vector<string> vtemp, map<string,string> opcode, map<string,string> Register_enco, map<string,string> funct3, map<string,string> funct7)
 {
     string is_error = "False";
@@ -24,15 +44,10 @@ string Rtype_to_binary(vector<string> vtemp, map<string,string> opcode, map<stri
     string rs1 = check_and_convert(vtemp[2], Register_enco, is_error);
     string rs2 = check_and_convert(vtemp[3], Register_enco, is_error);
     output+=check_and_convert(vtemp[0], funct7, is_error);
-    output+=" ";
     output+=rs2;
-    output+=" ";
     output+=rs1;
-    output+=" ";
     output+=check_and_convert(vtemp[0], funct3, is_error);
-    output+=" ";
     output+=rd;
-    output+=" ";
     output+=check_and_convert(vtemp[0], opcode, is_error);
     if (is_error=="False") return output;
     else return "Error";
@@ -55,15 +70,10 @@ string Stype_to_binary(vector<string> vtemp, map<string,string> opcode, map<stri
     string imm_0_to_4 = imm_whole_final.substr(7,5);
     string imm_5_to_11 = imm_whole_final.substr(0,7);
     output += imm_5_to_11;
-    output += " ";
     output += rs2;
-    output += " ";
     output += rs1;
-    output += " ";
     output += check_and_convert(vtemp[0], funct3, is_error);
-    output += " ";
     output += imm_0_to_4;
-    output += " ";
     output += check_and_convert(vtemp[0], opcode, is_error);
     if (is_error=="False") return output;
     else return "Error";
@@ -72,6 +82,8 @@ string Stype_to_binary(vector<string> vtemp, map<string,string> opcode, map<stri
 
 int main()
 {
+    map<string, int> labels;
+    
     map<string,string> opcode;
     {
         opcode["add"]="0110011";
@@ -291,6 +303,7 @@ int main()
 
 
     //check and convert the input to binary
+    string temp_label = "";
     vector<string> binary_output;
     bool faulty_code = false;
     string temp_binary;
@@ -298,6 +311,7 @@ int main()
     
     for (int j = 0; j<full_program.size(); j++)
     {
+        //R type when no label is present before
         if(ins_type[full_program[j][0]]=='R')
         {
             temp_binary = Rtype_to_binary(full_program[j], opcode, Register_enco, funct3, funct7);
@@ -309,6 +323,34 @@ int main()
             binary_output.emplace_back(temp_binary);
             PC++;
         }
+        
+        //when label is present before R type
+        else if(ins_type[full_program[j][1]]=='R')
+        {
+            temp_label = full_program[j][0];
+            if (temp_label[temp_label.length()-1] != ':')
+            {
+                faulty_code = true;
+                break;
+            }
+            temp_label = temp_label.substr(0,temp_label.length()-1);
+            labels.emplace(temp_label, PC*4);
+            full_program[j].erase(full_program[j].begin());
+
+            temp_binary = Rtype_to_binary(full_program[j], opcode, Register_enco, funct3, funct7);
+            if (temp_binary=="Error")
+            {
+                faulty_code = true;
+                break;
+            }
+            binary_output.emplace_back(temp_binary);
+            PC++;
+        }
+        
+
+
+        
+        //S type when no label is present before
         else if(ins_type[full_program[j][0]]=='S')
         {
             temp_binary = Stype_to_binary(full_program[j], opcode, Register_enco, funct3);
@@ -319,6 +361,76 @@ int main()
             }
             binary_output.emplace_back(temp_binary);
             PC++;
+        }
+
+        //when label is present before S type
+        else if(ins_type[full_program[j][1]]=='S')
+        {
+            temp_label = full_program[j][0];
+            if (temp_label[temp_label.length()-1] != ':')
+            {
+                faulty_code = true;
+                break;
+            }
+            temp_label = temp_label.substr(0,temp_label.length()-1);
+            labels.emplace(temp_label, PC*4);
+            full_program[j].erase(full_program[j].begin());
+
+            temp_binary = Stype_to_binary(full_program[j], opcode, Register_enco, funct3);
+            if (temp_binary=="Error")
+            {
+                faulty_code = true;
+                break;
+            }
+            binary_output.emplace_back(temp_binary);
+            PC++;
+        }
+
+        
+        
+        
+        
+        //U type when no label is present before
+        else if(ins_type[full_program[j][0]]=='U')
+        {
+            temp_binary = Utype_to_binary(full_program[j], opcode, Register_enco);
+            if (temp_binary=="Error")
+            {
+                faulty_code = true;
+                break;
+            }
+            binary_output.emplace_back(temp_binary);
+            PC++;
+        }
+        
+        //when label is present before U type
+        else if(ins_type[full_program[j][1]]=='U')
+        {
+            temp_label = full_program[j][0];
+            if (temp_label[temp_label.length()-1] != ':')
+            {
+                faulty_code = true;
+                break;
+            }
+            temp_label = temp_label.substr(0,temp_label.length()-1);
+            labels.emplace(temp_label, PC*4);
+            full_program[j].erase(full_program[j].begin());
+
+            temp_binary = Utype_to_binary(full_program[j], opcode, Register_enco);
+            if (temp_binary=="Error")
+            {
+                faulty_code = true;
+                break;
+            }
+            binary_output.emplace_back(temp_binary);
+            PC++;
+        }
+
+
+        else
+        {
+            faulty_code = true;
+            break;
         }
     }
 
