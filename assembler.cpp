@@ -34,6 +34,8 @@ string string_to_bin(string s)
     string ans = imm_whole.to_string();
     return ans;
 }
+
+
 string string_to_bin_Jtype(string s)
 {
     int num = 0;
@@ -63,6 +65,8 @@ string string_to_bin_Jtype(string s)
     string ans = imm_whole.to_string();
     return ans;
 }
+
+
 string check_and_convert(string tocheck, map<string, string> checker, string &isError)
 {
     if (checker.find(tocheck)==checker.end())
@@ -79,18 +83,22 @@ string Utype_to_binary(vector<string> vtemp, map<string,string> opcode, map<stri
     string output = "";
     string rd = check_and_convert(vtemp[1], Register_enco, is_error);
     int decimal_value = stoi(vtemp[2]);
-    if (decimal_value > 1048575 || decimal_value < -1048576)
+    if (decimal_value > 4294967295 || decimal_value < -4294967296)
     {
         return "Error";
     }
-    bitset<20> imm_whole(decimal_value);
+    bitset<32> imm_whole(decimal_value);
     string imm_whole_final = imm_whole.to_string();
+    imm_whole_final = imm_whole_final.substr(0,20);
     output += imm_whole_final;
     output += rd;
     output += check_and_convert(vtemp[0], opcode, is_error);
     if (is_error=="False") return output;
     else return "Error";
 }
+
+
+
 string Btype_to_binary(vector<string> vtemp, map<string,string> opcode, map<string,string> Register_enco, map<string,string> funct3)
 {
     string is_error = "False";
@@ -127,6 +135,9 @@ string Btype_to_binary(vector<string> vtemp, map<string,string> opcode, map<stri
     else return "Error";
 }
 
+
+
+
 string Rtype_to_binary(vector<string> vtemp, map<string,string> opcode, map<string,string> Register_enco, map<string,string> funct3, map<string,string> funct7)
 {
     string is_error = "False";
@@ -143,6 +154,10 @@ string Rtype_to_binary(vector<string> vtemp, map<string,string> opcode, map<stri
     if (is_error=="False") return output;
     else return "Error";
 }
+
+
+
+
 string Itype_to_binary(vector<string> vtemp, map<string,string> opcode, map<string,string> Register_enco, map<string,string> funct3,string rs1, string imm)
 {
     string is_error = "False";
@@ -161,6 +176,10 @@ string Itype_to_binary(vector<string> vtemp, map<string,string> opcode, map<stri
     if (is_error=="False") return output;
     else return "Error";
 }
+
+
+
+
 string Itype_to_binary(vector<string> vtemp, map<string,string> opcode, map<string,string> Register_enco, map<string,string> funct3)
 {
     string is_error = "False";
@@ -181,6 +200,9 @@ string Itype_to_binary(vector<string> vtemp, map<string,string> opcode, map<stri
     if (is_error=="False") return output;
     else return "Error";
 }
+
+
+
 
 string Stype_to_binary(vector<string> vtemp, map<string,string> opcode, map<string,string> Register_enco, map<string,string> funct3)
 {
@@ -206,6 +228,9 @@ string Stype_to_binary(vector<string> vtemp, map<string,string> opcode, map<stri
     if (is_error=="False") return output;
     else return "Error";
 }
+
+
+
 string Jtype_to_binary(vector<string> vtemp, map<string,string> opcode, map<string,string> Register_enco)
 {
     string is_error = "False";
@@ -241,6 +266,8 @@ string Jtype_to_binary(vector<string> vtemp, map<string,string> opcode, map<stri
             return "Error";
         }
 }
+
+
 
 int main()
 {
@@ -588,13 +615,6 @@ int main()
             PC++;
         }
 
-
-        else
-        {
-            faulty_code = true;
-            break;
-        }
-    }
 
 
     //if code is faulty, will give error else write the output to file
