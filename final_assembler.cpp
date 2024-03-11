@@ -87,7 +87,7 @@ public:
     }
     bool check_and_correct_S(map<string,string> ins_type, map<string,string> register_enco)
     {
-        if(ins_type.find(this->tokens_in_ins[0]) == ins_type.end() || register_enco.find(this->tokens_in_ins[1]) == register_enco.end() || register_enco.find(this->tokens_in_ins[3]) == register_enco.end() || stoi(this->tokens_in_ins[2]) > 4095 || stoi(this->tokens_in_ins[2]) < -4096)
+        if(ins_type.find(this->tokens_in_ins[0]) == ins_type.end() || register_enco.find(this->tokens_in_ins[1]) == register_enco.end() || register_enco.find(this->tokens_in_ins[3]) == register_enco.end() || stoi(this->tokens_in_ins[2]) >  2047 || stoi(this->tokens_in_ins[2]) < -2048)
         {
             return false;
         }
@@ -95,7 +95,7 @@ public:
     }
     bool check_and_correct_B(map<string,string> ins_type, map<string,string> register_enco)
     {
-        if(ins_type.find(this->tokens_in_ins[0]) == ins_type.end() || register_enco.find(this->tokens_in_ins[1]) == register_enco.end() || register_enco.find(this->tokens_in_ins[2]) == register_enco.end() || stoi(this->tokens_in_ins[3]) > 8191 || stoi(this->tokens_in_ins[3]) < -8192)
+        if(ins_type.find(this->tokens_in_ins[0]) == ins_type.end() || register_enco.find(this->tokens_in_ins[1]) == register_enco.end() || register_enco.find(this->tokens_in_ins[2]) == register_enco.end() || stoi(this->tokens_in_ins[3]) > 4095 || stoi(this->tokens_in_ins[3]) < -4096)
         {
             return false;
         }
@@ -111,7 +111,7 @@ public:
     }
     bool check_and_correct_U(map<string,string> ins_type, map<string,string> register_enco)
     {
-        if(ins_type.find(this->tokens_in_ins[0]) == ins_type.end() || register_enco.find(this->tokens_in_ins[1]) == register_enco.end() || stoi(this->tokens_in_ins[2]) > 4294967295 || stoi(this->tokens_in_ins[2]) < -4294967296)
+        if(ins_type.find(this->tokens_in_ins[0]) == ins_type.end() || register_enco.find(this->tokens_in_ins[1]) == register_enco.end() || stoi(this->tokens_in_ins[2]) > 2147483647 || stoi(this->tokens_in_ins[2]) < -2147483648)
         {
             return false;
         }
@@ -119,7 +119,7 @@ public:
     }
     bool check_and_correct_J(map<string,string> ins_type, map<string,string> register_enco)
     {
-        if(ins_type.find(this->tokens_in_ins[0]) == ins_type.end() || register_enco.find(this->tokens_in_ins[1]) == register_enco.end() || stoi(this->tokens_in_ins[2]) > 2097151 || stoi(this->tokens_in_ins[2]) < -2097152)
+        if(ins_type.find(this->tokens_in_ins[0]) == ins_type.end() || register_enco.find(this->tokens_in_ins[1]) == register_enco.end() || stoi(this->tokens_in_ins[2]) > 1048575|| stoi(this->tokens_in_ins[2]) < -1048576)
         {
             return false;
         }
