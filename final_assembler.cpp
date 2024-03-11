@@ -101,6 +101,14 @@ public:
         }
         return true;
     }
+    bool check_and_correct_B(map<string,string> ins_type, map<string,string> register_enco,map<string,int> label)
+    {
+        if(ins_type.find(this->tokens_in_ins[0]) == ins_type.end() || register_enco.find(this->tokens_in_ins[1]) == register_enco.end() || register_enco.find(this->tokens_in_ins[2]) == register_enco.end())
+        {
+            return false;
+        }
+        return true;
+    }
     bool check_and_correct_U(map<string,string> ins_type, map<string,string> register_enco)
     {
         if(ins_type.find(this->tokens_in_ins[0]) == ins_type.end() || register_enco.find(this->tokens_in_ins[1]) == register_enco.end() || stoi(this->tokens_in_ins[2]) > 4294967295 || stoi(this->tokens_in_ins[2]) < -4294967296)
@@ -117,7 +125,7 @@ public:
         }
         return true;
     }
-    bool check_and_correct(map<string,string> ins_type, map<string,string> register_enco)
+    bool check_and_correct(map<string,string> ins_type, map<string,string> register_enco,map<string,int> label)
     {
         if(ins_type[this->tokens_in_ins[0]] == "R")
         {
@@ -131,9 +139,13 @@ public:
         {
             return this->check_and_correct_S(ins_type,register_enco);
         }
-        else if(ins_type[this->tokens_in_ins[0]] == "B")
+        else if(ins_type[this->tokens_in_ins[0]] == "B" && label.find(this->tokens_in_ins[3]) == label.end())
         {
             return this->check_and_correct_B(ins_type,register_enco);
+        }
+        else if(ins_type[this->tokens_in_ins[0]] == "B")
+        {
+            return this->check_and_correct_B(ins_type,register_enco,label);
         }
         else if(ins_type[this->tokens_in_ins[0]] == "U")
         {
@@ -350,7 +362,7 @@ int main()
     ofstream file2("Output.txt");
     for(auto &it:program)
     {
-        if((error!= true) && (it.check_and_correct(ins_type,Register_enco) == false))
+        if((error!= true) && (it.check_and_correct(ins_type,Register_enco,label) == false))
         {
             error = true;
             cout << "Error in the instruction at Line " << it.index/4 << endl;
