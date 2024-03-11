@@ -125,6 +125,14 @@ public:
         }
         return true;
     }
+    bool check_and_correct_J(map<string,string> ins_type, map<string,string> register_enco,map<string,int> label)
+    {
+        if(ins_type.find(this->tokens_in_ins[0]) == ins_type.end() || register_enco.find(this->tokens_in_ins[1]) == register_enco.end())
+        {
+            return false;
+        }
+        return true;
+    }
     bool check_and_correct(map<string,string> ins_type, map<string,string> register_enco,map<string,int> label)
     {
         if(ins_type[this->tokens_in_ins[0]] == "R")
@@ -151,11 +159,21 @@ public:
         {
             return this->check_and_correct_U(ins_type,register_enco);
         }
-        else if(ins_type[this->tokens_in_ins[0]] == "J")
+        else if(ins_type[this->tokens_in_ins[0]] == "J" && label.find(this->tokens_in_ins[2]) == label.end())
         {
             return this->check_and_correct_J(ins_type,register_enco);
+            cout << "Its here" ;
         }
-        return false;
+        else if(ins_type[this->tokens_in_ins[0]] == "J")
+        {
+            return this->check_and_correct_J(ins_type,register_enco, label);
+            cout << "Its here" ;
+
+        }
+        else
+        {
+            return false;
+        }
     }
 };
 int main()
@@ -438,7 +456,16 @@ int main()
                     else if(ins_type[it.tokens_in_ins[0]] == "J")
                     {
                         string data = "";
-                        data = bitset<21>(stoi(it.tokens_in_ins[2])).to_string();
+                        if(label.find(it.tokens_in_ins[2]) != label.end())
+                        {
+                            int offset =  it.index - label[it.tokens_in_ins[2]];
+                            data = bitset<21>(offset).to_string();
+                        }
+                        else
+                        {
+                            int offset = stoi(it.tokens_in_ins[2]);
+                            data = bitset<21>(offset).to_string();
+                        }
                         temp_binary += data[0];
                         for(int i = 10 ; i < 20 ; i++)
                         {
