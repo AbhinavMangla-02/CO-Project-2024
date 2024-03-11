@@ -1,89 +1,153 @@
-#include <bits/stdc++.h>
-#include <fstream>
-#include <bitset>
-
-
+#include<bits/stdc++.h>
 using namespace std;
 
-
-string check_and_convert(string tocheck, map<string, string> checker, string &isError)
+class PC
 {
-    if (checker.find(tocheck)==checker.end())
+public:
+    string ins;
+    int index = 0;
+    vector<string> tokens_in_ins;
+    PC(string ins)
     {
-        isError = "True";
+        static int next = 0;
+        this->ins = ins;
+        this->index = next;
+        next += 4;
     }
-    return checker[tocheck];
-}
-
-
-string Utype_to_binary(vector<string> vtemp, map<string,string> opcode, map<string,string> Register_enco)
-{
-    string is_error = "False";
-    string output = "";
-    string rd = check_and_convert(vtemp[1], Register_enco, is_error);
-    int decimal_value = stoi(vtemp[2]);
-    if (decimal_value > 1048575 || decimal_value < -1048576)
+    void covert_to_tokens()
     {
-        return "Error";
+        string word = "";
+        for (auto &it2 : this->ins)
+        {
+            if (it2 == ' ' || it2 == ',' || it2 == '(' || it2 == ')')
+            {
+                if(word ==" ")
+                {
+                    continue;
+                }
+                else if (word != " " && word != "")
+                {
+                    this->tokens_in_ins.push_back(word);
+                    word = "";
+                }
+            }
+            else
+            {
+                word += it2;
+            }
+        }
+        if(word!= "")
+        {
+            this->tokens_in_ins.push_back(word);
+            word = "";
+        }
+    
     }
-    bitset<20> imm_whole(decimal_value);
-    string imm_whole_final = imm_whole.to_string();
-    output += imm_whole_final;
-    output += rd;
-    output += check_and_convert(vtemp[0], opcode, is_error);
-    if (is_error=="False") return output;
-    else return "Error";
-}
-
-
-string Rtype_to_binary(vector<string> vtemp, map<string,string> opcode, map<string,string> Register_enco, map<string,string> funct3, map<string,string> funct7)
-{
-    string is_error = "False";
-    string output = "";
-    string rd = check_and_convert(vtemp[1], Register_enco, is_error);
-    string rs1 = check_and_convert(vtemp[2], Register_enco, is_error);
-    string rs2 = check_and_convert(vtemp[3], Register_enco, is_error);
-    output+=check_and_convert(vtemp[0], funct7, is_error);
-    output+=rs2;
-    output+=rs1;
-    output+=check_and_convert(vtemp[0], funct3, is_error);
-    output+=rd;
-    output+=check_and_convert(vtemp[0], opcode, is_error);
-    if (is_error=="False") return output;
-    else return "Error";
-}
-
-
-string Stype_to_binary(vector<string> vtemp, map<string,string> opcode, map<string,string> Register_enco, map<string,string> funct3)
-{
-    string is_error = "False";
-    string output = "";
-    string rs1 = check_and_convert(vtemp[3], Register_enco, is_error);
-    string rs2 = check_and_convert(vtemp[1], Register_enco, is_error);
-    int decimal_value = stoi(vtemp[2]);
-    if (decimal_value > 2047 || decimal_value < -2048)
+    void print_tokens()
     {
-        return "Error";
+        cout << this->index << " ";
+        for (int i = 0; i < this->tokens_in_ins.size(); i++)
+        {
+            cout << this->tokens_in_ins[i] << " ";
+        }
+        cout << endl;
     }
-    bitset<12> imm_whole(decimal_value);
-    string imm_whole_final = imm_whole.to_string();
-    string imm_0_to_4 = imm_whole_final.substr(7,5);
-    string imm_5_to_11 = imm_whole_final.substr(0,7);
-    output += imm_5_to_11;
-    output += rs2;
-    output += rs1;
-    output += check_and_convert(vtemp[0], funct3, is_error);
-    output += imm_0_to_4;
-    output += check_and_convert(vtemp[0], opcode, is_error);
-    if (is_error=="False") return output;
-    else return "Error";
-}
-
-
+    bool check_and_correct_R(map<string,string> ins_type, map<string,string> register_enco)
+    {
+        if(ins_type.find(this->tokens_in_ins[0]) == ins_type.end() || register_enco.find(this->tokens_in_ins[1]) == register_enco.end() || register_enco.find(this->tokens_in_ins[2]) == register_enco.end() || register_enco.find(this->tokens_in_ins[3]) == register_enco.end())
+        {
+            return false;
+        }
+        return true;
+    }
+    bool check_and_correct_I(map<string,string> ins_type, map<string,string> register_enco)
+    {
+        if(ins_type.find(this->tokens_in_ins[0]) == ins_type.end())
+        {
+            return false;
+        }
+        else
+        {
+            if(this->tokens_in_ins[0] == "lw")
+            {
+                if(register_enco.find(this->tokens_in_ins[1]) == register_enco.end() || register_enco.find(this->tokens_in_ins[3]) == register_enco.end() || stoi(this->tokens_in_ins[2]) > 4095 || stoi(this->tokens_in_ins[2]) < -4096)
+                {
+                    return false;
+                }
+            }
+            else if(this->tokens_in_ins[0] == "jalr" || this->tokens_in_ins[0] == "addi" || this->tokens_in_ins[0] == "sltiu")
+            {
+                if(register_enco.find(this->tokens_in_ins[1]) == register_enco.end() || register_enco.find(this->tokens_in_ins[2]) == register_enco.end()  || stoi(this->tokens_in_ins[3]) > 4095 || stoi(this->tokens_in_ins[3]) < -4096)
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    bool check_and_correct_S(map<string,string> ins_type, map<string,string> register_enco)
+    {
+        if(ins_type.find(this->tokens_in_ins[0]) == ins_type.end() || register_enco.find(this->tokens_in_ins[1]) == register_enco.end() || register_enco.find(this->tokens_in_ins[3]) == register_enco.end() || stoi(this->tokens_in_ins[2]) > 4095 || stoi(this->tokens_in_ins[2]) < -4096)
+        {
+            return false;
+        }
+        return true;
+    }
+    bool check_and_correct_B(map<string,string> ins_type, map<string,string> register_enco)
+    {
+        if(ins_type.find(this->tokens_in_ins[0]) == ins_type.end() || register_enco.find(this->tokens_in_ins[1]) == register_enco.end() || register_enco.find(this->tokens_in_ins[2]) == register_enco.end() || stoi(this->tokens_in_ins[3]) > 8191 || stoi(this->tokens_in_ins[3]) < -8192)
+        {
+            return false;
+        }
+        return true;
+    }
+    bool check_and_correct_U(map<string,string> ins_type, map<string,string> register_enco)
+    {
+        if(ins_type.find(this->tokens_in_ins[0]) == ins_type.end() || register_enco.find(this->tokens_in_ins[1]) == register_enco.end() || stoi(this->tokens_in_ins[2]) > 4294967295 || stoi(this->tokens_in_ins[2]) < -4294967296)
+        {
+            return false;
+        }
+        return true;
+    }
+    bool check_and_correct_J(map<string,string> ins_type, map<string,string> register_enco)
+    {
+        if(ins_type.find(this->tokens_in_ins[0]) == ins_type.end() || register_enco.find(this->tokens_in_ins[1]) == register_enco.end() || stoi(this->tokens_in_ins[2]) > 2097151 || stoi(this->tokens_in_ins[2]) < -2097152)
+        {
+            return false;
+        }
+        return true;
+    }
+    bool check_and_correct(map<string,string> ins_type, map<string,string> register_enco)
+    {
+        if(ins_type[this->tokens_in_ins[0]] == "R")
+        {
+            return this->check_and_correct_R(ins_type,register_enco);
+        }
+        else if(ins_type[this->tokens_in_ins[0]] == "I")
+        {
+            return this->check_and_correct_I(ins_type,register_enco);
+        }
+        else if(ins_type[this->tokens_in_ins[0]] == "S")
+        {
+            return this->check_and_correct_S(ins_type,register_enco);
+        }
+        else if(ins_type[this->tokens_in_ins[0]] == "B")
+        {
+            return this->check_and_correct_B(ins_type,register_enco);
+        }
+        else if(ins_type[this->tokens_in_ins[0]] == "U")
+        {
+            return this->check_and_correct_U(ins_type,register_enco);
+        }
+        else if(ins_type[this->tokens_in_ins[0]] == "J")
+        {
+            return this->check_and_correct_J(ins_type,register_enco);
+        }
+        return false;
+    }
+};
 int main()
 {
-    map<string, int> labels;
-    
     map<string,string> opcode;
     {
         opcode["add"]="0110011";
@@ -104,7 +168,7 @@ int main()
         opcode["bne"]="1100011";
         opcode["blt"]="1100011";
         opcode["bge"]="1100011";
-        opcode["bltu"]="1100011";
+         opcode["bltu"]="1100011";
         opcode["bgeu"]="1100011";
         opcode["lui"]="0110111";
         opcode["auipc"]="0010111";
@@ -188,7 +252,7 @@ int main()
         funct7["and"]="0000000";
     }
 
-    map<string,char> ins_type;
+    map<string,string> ins_type;
     {
         ins_type["add"]='R';
         ins_type["sub"]='R';
@@ -250,210 +314,175 @@ int main()
         register_storage["t5"]=0;
         register_storage["t6"]=0;
     }
-
-    //opening input file
-    ifstream input_file;
-    input_file.open("i.txt");
-    if (!input_file.is_open()) {
-        cout << "Error opening input file! " << endl;
-
-    }
-
-    //reading all data from input file and storing it in full_program
+    vector<PC> program;
+    ifstream file("input.txt");
     string line;
-    vector<vector<string>> full_program;
-    vector<string> v;
-    while (getline(input_file, line)) 
+    while (getline(file, line))
     {
-        v.clear();
-        if (line == "") 
-        {
-            continue;
-        }
-
-        // Creates the vector of different strings containing the Instruction and Registers
-        string word = "";
-        for (int it = 0; it < line.length(); it++) 
-        {
-            if (line[it] == ' ' || line[it] == ',' || line[it] == '(' || line[it] == ')') 
-            {
-                if (word != "") 
-                {
-                    v.push_back(word);
-                    word = "";
-                }
-            } 
-            else 
-            {
-                word += line[it];
-            }
-        }
-        if (word != "") 
-        {
-            v.push_back(word);
-            word = "";
-        }
-
-        full_program.emplace_back(v);
+        program.push_back(PC(line));
     }
-    input_file.close();
-
-
-
-
-
-    //check and convert the input to binary
-    string temp_label = "";
-    vector<string> binary_output;
-    bool faulty_code = false;
-    string temp_binary;
-    int PC = 0;           //program counter
-    
-    for (int j = 0; j<full_program.size(); j++)
+    file.close();
+    bool error = false;
+    map<string,int> label;
+    for(auto &it:program)
     {
-        //R type when no label is present before
-        if(ins_type[full_program[j][0]]=='R')
+        it.covert_to_tokens();
+    }
+    for(auto &it : program)
+    {
+        if(it.tokens_in_ins[0][it.tokens_in_ins[0].size()-1] == ':')
         {
-            temp_binary = Rtype_to_binary(full_program[j], opcode, Register_enco, funct3, funct7);
-            if (temp_binary=="Error")
-            {
-                faulty_code = true;
-                break;
-            }
-            binary_output.emplace_back(temp_binary);
-            PC++;
+            label[it.tokens_in_ins[0].substr(0,it.tokens_in_ins[0].size()-1)] = it.index;
+            it.tokens_in_ins.erase(it.tokens_in_ins.begin());
         }
-        
-        //when label is present before R type
-        else if(ins_type[full_program[j][1]]=='R')
-        {
-            temp_label = full_program[j][0];
-            if (temp_label[temp_label.length()-1] != ':')
-            {
-                faulty_code = true;
-                break;
-            }
-            temp_label = temp_label.substr(0,temp_label.length()-1);
-            labels.emplace(temp_label, PC*4);
-            full_program[j].erase(full_program[j].begin());
-
-            temp_binary = Rtype_to_binary(full_program[j], opcode, Register_enco, funct3, funct7);
-            if (temp_binary=="Error")
-            {
-                faulty_code = true;
-                break;
-            }
-            binary_output.emplace_back(temp_binary);
-            PC++;
-        }
-        
-
-
-        
-        //S type when no label is present before
-        else if(ins_type[full_program[j][0]]=='S')
-        {
-            temp_binary = Stype_to_binary(full_program[j], opcode, Register_enco, funct3);
-            if (temp_binary=="Error")
-            {
-                faulty_code = true;
-                break;
-            }
-            binary_output.emplace_back(temp_binary);
-            PC++;
-        }
-
-        //when label is present before S type
-        else if(ins_type[full_program[j][1]]=='S')
-        {
-            temp_label = full_program[j][0];
-            if (temp_label[temp_label.length()-1] != ':')
-            {
-                faulty_code = true;
-                break;
-            }
-            temp_label = temp_label.substr(0,temp_label.length()-1);
-            labels.emplace(temp_label, PC*4);
-            full_program[j].erase(full_program[j].begin());
-
-            temp_binary = Stype_to_binary(full_program[j], opcode, Register_enco, funct3);
-            if (temp_binary=="Error")
-            {
-                faulty_code = true;
-                break;
-            }
-            binary_output.emplace_back(temp_binary);
-            PC++;
-        }
-
-        
-        
-        
-        
-        //U type when no label is present before
-        else if(ins_type[full_program[j][0]]=='U')
-        {
-            temp_binary = Utype_to_binary(full_program[j], opcode, Register_enco);
-            if (temp_binary=="Error")
-            {
-                faulty_code = true;
-                break;
-            }
-            binary_output.emplace_back(temp_binary);
-            PC++;
-        }
-        
-        //when label is present before U type
-        else if(ins_type[full_program[j][1]]=='U')
-        {
-            temp_label = full_program[j][0];
-            if (temp_label[temp_label.length()-1] != ':')
-            {
-                faulty_code = true;
-                break;
-            }
-            temp_label = temp_label.substr(0,temp_label.length()-1);
-            labels.emplace(temp_label, PC*4);
-            full_program[j].erase(full_program[j].begin());
-
-            temp_binary = Utype_to_binary(full_program[j], opcode, Register_enco);
-            if (temp_binary=="Error")
-            {
-                faulty_code = true;
-                break;
-            }
-            binary_output.emplace_back(temp_binary);
-            PC++;
-        }
-
-
         else
         {
-            faulty_code = true;
+            string temp = ins_type[it.tokens_in_ins[0]];
+            if(temp != "R" && temp != "S" && temp != "U" && temp != "I" && temp != "B" && temp != "J")
+            {
+                error = true;
+                cout << "Error in the instruction at Line " << it.index/4 << endl;
+                break;
+            }
+        }
+    }
+
+    ofstream file2("Output.txt");
+    for(auto &it:program)
+    {
+        if((error!= true) && (it.check_and_correct(ins_type,Register_enco) == false))
+        {
+            error = true;
+            cout << "Error in the instruction at Line " << it.index/4 << endl;
             break;
         }
     }
-
-
-    //if code is faulty, will give error else write the output to file
-    if (faulty_code==true)
+    if(error == false)
     {
-        cout << "Error in line " << PC << endl;
-    }
-    
-    else
-    {
-        ofstream output_file;
-        output_file.open("Output.txt");
-        if (!output_file.is_open()) {
-            cout << "Error opening output file!" << endl;
-        }
-
-        for (int k = 0; k<binary_output.size(); k++)
+        for(int i = 0 ; i < program.size()-1 ; i++)
         {
-            output_file << binary_output[k] << endl;
+            if(program[i].tokens_in_ins[0] == "beq" && program[i].tokens_in_ins[1]  == "zero" && program[i].tokens_in_ins[2]  == "zero" && program[i].tokens_in_ins[3] == "0")
+            {
+                error = true;
+                cout << "ERROR : beq zero,zero,0 -- present before last Line" << endl;
+                break;
+            }
         }
-
-        output_file.close();
+        if(error == false && program[program.size()-1].tokens_in_ins[0] != "beq" && program[program.size()-1].tokens_in_ins[1]  != "zero" && program[program.size()-1].tokens_in_ins[2]  != "zero" && program[program.size()-1].tokens_in_ins[3] != "0")
+        {
+            error = true;
+            cout << "ERROR : beq zero,zero,0 -- Missing from program" << endl;
+        }
     }
+    if(error == false)
+        {
+            for(auto &it:program)
+                {
+                    string temp_binary = "";
+                    if(ins_type[it.tokens_in_ins[0]] == "R")
+                    {
+                        temp_binary += funct7[it.tokens_in_ins[0]];
+                        temp_binary += Register_enco[it.tokens_in_ins[3]];
+                        temp_binary += Register_enco[it.tokens_in_ins[2]];
+                        temp_binary += funct3[it.tokens_in_ins[0]];
+                        temp_binary += Register_enco[it.tokens_in_ins[1]];
+                        temp_binary += opcode[it.tokens_in_ins[0]];
+                    }
+                    else if (ins_type[it.tokens_in_ins[0]] == "B")
+                    {
+                        string data = "";
+                        if(label.find(it.tokens_in_ins[3]) != label.end())
+                        {
+                            int offset =  it.index - label[it.tokens_in_ins[3]];
+                            data = bitset<13>(offset).to_string();
+                        }
+                        else
+                        {
+                            int offset = stoi(it.tokens_in_ins[3]);
+                            data = bitset<13>(offset).to_string();
+                        }
+                        temp_binary += data[0];
+                        for(int i = 2 ; i < 8 ; i++)
+                        {
+                            temp_binary += data[i];
+                        }
+                        temp_binary += Register_enco[it.tokens_in_ins[2]];
+                        temp_binary += Register_enco[it.tokens_in_ins[1]];
+                        temp_binary += funct3[it.tokens_in_ins[0]];
+                        for(int i = 8 ; i < 12 ; i++)
+                        {
+                            temp_binary += data[i];
+                        }
+                        temp_binary += data[1];
+                        temp_binary += opcode[it.tokens_in_ins[0]];
+                    }
+                    else if(ins_type[it.tokens_in_ins[0]] == "U")
+                    {
+                        string data = (bitset<32>(stoi(it.tokens_in_ins[2])).to_string()).substr(0,20);
+                        temp_binary += data;
+                        temp_binary += Register_enco[it.tokens_in_ins[1]];
+                        temp_binary += opcode[it.tokens_in_ins[0]];
+                    }
+                    else if(ins_type[it.tokens_in_ins[0]] == "J")
+                    {
+                        string data = "";
+                        data = bitset<21>(stoi(it.tokens_in_ins[2])).to_string();
+                        temp_binary += data[0];
+                        for(int i = 10 ; i < 20 ; i++)
+                        {
+                            temp_binary += data[i];
+                        }
+                        temp_binary += data[9];
+                        for(int i = 1 ; i < 9 ; i++)
+                        {
+                            temp_binary += data[i];
+                        }
+                        temp_binary += Register_enco[it.tokens_in_ins[1]];
+                        temp_binary += opcode[it.tokens_in_ins[0]];
+                    }
+                    else if (ins_type[it.tokens_in_ins[0]] == "S")
+                    {
+                        int offset = stoi(it.tokens_in_ins[2]);
+                        string imm = bitset<12>(offset).to_string();
+                        for (int i = 0; i <= 6; i++)
+                        {
+                            temp_binary += imm[i];
+                        }
+                        temp_binary += Register_enco[it.tokens_in_ins[1]];
+                        temp_binary += Register_enco[it.tokens_in_ins[3]];
+                        temp_binary += funct3[it.tokens_in_ins[0]];
+                        for (int i = 7; i <= 11; i++)
+                        {
+                            temp_binary += imm[i];
+                        }
+                        temp_binary += opcode[it.tokens_in_ins[0]];
+                    }
+                    else if(ins_type[it.tokens_in_ins[0]] == "I")
+                    {
+                        string data = "";
+                        if(it.tokens_in_ins[0] == "lw")
+                        {
+                            int offset = stoi(it.tokens_in_ins[2]);
+                            string imm = bitset<12>(offset).to_string();
+                            temp_binary += imm;
+                            temp_binary += Register_enco[it.tokens_in_ins[3]];
+                            temp_binary += funct3[it.tokens_in_ins[0]];
+                            temp_binary += Register_enco[it.tokens_in_ins[1]];
+                            temp_binary += opcode[it.tokens_in_ins[0]];
+                        }
+                        else if(it.tokens_in_ins[0] == "jalr" || it.tokens_in_ins[0] == "addi" || it.tokens_in_ins[0] == "sltiu")
+                        {
+                            int offset = stoi(it.tokens_in_ins[3]);
+                            string imm = bitset<12>(offset).to_string();
+                            temp_binary += imm;
+                            temp_binary += Register_enco[it.tokens_in_ins[2]];
+                            temp_binary += funct3[it.tokens_in_ins[0]];
+                            temp_binary += Register_enco[it.tokens_in_ins[1]];
+                            temp_binary += opcode[it.tokens_in_ins[0]];
+                        }
+                    }
+                    file2 << temp_binary << endl;
+                }
+        }
+    file2.close();
 }
