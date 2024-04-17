@@ -93,6 +93,8 @@ class PC:
             return self.check_and_correct_J(ins_type, register_enco, label)
         elif ins_type[self.tokens_in_ins[0]] == "J":
             return self.check_and_correct_J(ins_type, register_enco,label)
+        elif ins_type[self.tokens_in_ins[0]] == "A":
+            return True
         else:
             return False
 
@@ -219,7 +221,11 @@ ins_type = {
     "bgeu": 'B',
     "lui": 'U',
     "auipc": 'U',
-    "jal": 'J'
+    "jal": 'J',
+    "mul": 'A',
+    "rst": 'A',
+    "halt": 'A',
+    "rvrs": 'A',
 }
 
 register_storage = {
@@ -277,7 +283,7 @@ for it in program:
     else:
         temp = ins_type[it.tokens_in_ins[0]]
         print(temp)
-        if temp != 'R' and temp != "S" and temp != "U" and temp != "I" and temp != "B" and temp != "J":
+        if temp != 'R' and temp != "S" and temp != "U" and temp != "I" and temp != "B" and temp != "J" and temp != "A":
             error = True
             print("Error in the instruction at Line", it.index / 4)
             break
@@ -429,5 +435,35 @@ if error == False:
                 temp_binary += funct3[it.tokens_in_ins[0]]
                 temp_binary += Register_enco[it.tokens_in_ins[1]]
                 temp_binary += opcode[it.tokens_in_ins[0]]
+        # Additional Instructions
+        elif ins_type[it.tokens_in_ins[0]] == "A":
+            if it.tokens_in_ins[0] == "mul":
+                temp_binary += "0000000"
+                temp_binary += Register_enco[it.tokens_in_ins[3]]
+                temp_binary += Register_enco[it.tokens_in_ins[2]]
+                temp_binary += "000"
+                temp_binary += Register_enco[it.tokens_in_ins[1]]
+                temp_binary += "0000001"
+            elif it.tokens_in_ins[0] == "rst":
+                temp_binary += "0000000"
+                temp_binary += "00000"
+                temp_binary += "00000"
+                temp_binary += "000"
+                temp_binary += "00000"
+                temp_binary += "0000010"
+            elif it.tokens_in_ins[0] == "halt":
+                temp_binary += "0000000"
+                temp_binary += "00000"
+                temp_binary += "00000"
+                temp_binary += "000"
+                temp_binary += "00000"
+                temp_binary += "0000011"
+            elif it.tokens_in_ins[0] == "rvrs":
+                temp_binary += "0000000"
+                temp_binary += "00000"
+                temp_binary += Register_enco[it.tokens_in_ins[2]]
+                temp_binary += "000"
+                temp_binary += Register_enco[it.tokens_in_ins[1]]
+                temp_binary += "0000100"
         file2.write(temp_binary + "\n")
 file2.close()
